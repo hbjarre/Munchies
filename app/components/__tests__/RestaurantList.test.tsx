@@ -1,7 +1,8 @@
+import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import RestaurantList from '../RestaurantList';
-import { getRestaurants, getFilters, getPriceRange, getOpenStatus } from '../../services/api';
+import { getRestaurants, getFilters, getPriceRange } from '../../services/api';
 
 // Mock next/image
 jest.mock('next/image', () => ({
