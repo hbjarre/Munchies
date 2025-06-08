@@ -4,7 +4,11 @@ module.exports = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'sf-pro': ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'SF Pro Text', 'SF Pro Display', 'system-ui'],
+      },
+    },
   },
   plugins: [],
 } 
