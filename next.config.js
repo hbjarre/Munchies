@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const config = {
   reactStrictMode: true,
   images: {
-    domains: ['work-test-web-2024-eze6j4scpq-lz.a.run.app'], // Allow images from our API domain
-    unoptimized: true, // Required for static export
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/images/**',
+      },
+    ],
   },
   output: 'standalone', // Optimized for production deployments
 };
 
-module.exports = nextConfig; 
+module.exports = config; 
