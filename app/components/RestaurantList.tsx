@@ -21,6 +21,7 @@ export default function RestaurantList() {
     const [selectedPrices, setSelectedPrices] = useState<string[]>([]);
     const [priceRanges, setPriceRanges] = useState<Map<string, string>>(new Map());
     const [openStatuses, setOpenStatuses] = useState<OpenStatuses>({});
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -42,29 +43,36 @@ export default function RestaurantList() {
                 // Fetch price ranges
                 const uniquePriceRangeIds = new Set(restaurantsData.map(r => r.price_range_id));
                 const priceRangePromises = Array.from(uniquePriceRangeIds).map(async (priceRangeId) => {
-                    try {
-                        const priceRange = await getPriceRange(priceRangeId);
-                        return [priceRangeId, priceRange?.range || '$$'] as [string, string];
-                    } catch (error) {
-                        console.error(`Error fetching price range for ID ${priceRangeId}:`, error);
-                        return [priceRangeId, '$$'] as [string, string];
+                    const priceRange = await getPriceRange(priceRangeId);
+                    if (!priceRange || !priceRange.range) {
+                        const error = new Error(`Invalid price range data for ID ${priceRangeId}`);
+                        console.error(error);
+                        throw error;
                     }
+                    return [priceRangeId, priceRange.range] as [string, string];
                 });
 
-                // Wait for all async operations to complete
-                const [statuses, priceRangeEntries] = await Promise.all([
-                    Promise.all(statusPromises),
-                    Promise.all(priceRangePromises)
-                ]);
+                try {
+                    // Wait for all async operations to complete
+                    const [statuses, priceRangeEntries] = await Promise.all([
+                        Promise.all(statusPromises),
+                        Promise.all(priceRangePromises)
+                    ]);
 
-                // Update all state at once
-                setRestaurants(restaurantsData);
-                setFilters(filtersData);
-                setOpenStatuses(Object.fromEntries(statuses));
-                setPriceRanges(new Map(priceRangeEntries));
-                setFilteredRestaurants(restaurantsData);
+                    // Update all state at once
+                    setRestaurants(restaurantsData);
+                    setFilters(filtersData);
+                    setOpenStatuses(Object.fromEntries(statuses));
+                    setPriceRanges(new Map(priceRangeEntries));
+                    setFilteredRestaurants(restaurantsData);
+                } catch (error) {
+                    console.error('Price range loading error:', error);
+                    setError('Unable to load all restaurant information.');
+                    throw error;
+                }
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error('Data fetching error:', error);
+                setError('Something went wrong loading the restaurants.');
             } finally {
                 setIsLoading(false);
             }
@@ -134,6 +142,22 @@ export default function RestaurantList() {
     const handlePriceChange = useCallback((prices: string[]) => {
         setSelectedPrices(prices);
     }, []);
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                    <p className="text-black/60 mb-4">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-4 py-2 bg-[#22C55E] text-white rounded-full hover:bg-[#22C55E]/90 transition-colors"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
